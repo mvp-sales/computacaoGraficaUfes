@@ -59,7 +59,15 @@ void display() {
    glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer
    glFlush();  // Render now
 }
- 
+
+void init(void){
+	glClearColor(0.0,0.0,0.0,0.0);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0,0.2,0.0,0.2,-1.0,1.0);
+}
+
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
 
@@ -78,7 +86,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);                 // Initialize GLUT
 	glutCreateWindow(titulo); // Create a window with the given title
 	//glutInitWindowSize(widthWindow, lengthWindow);   // Set the window's initial width & height
-	
+
 	glutMouseFunc(mouseClick);
 	glutDisplayFunc(display); // Register display callback handler for window re-paint
 
