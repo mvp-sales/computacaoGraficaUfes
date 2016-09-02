@@ -33,11 +33,12 @@ void init(void);
 void processaJanela(const XMLNode* node);
 void processaQuadrado(const XMLNode* node);
 
-/* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
-
+	char path[100];
+	strcpy(path,argv[1]);
+	strcat(path,"config.xml");
 	XMLDocument* doc = new XMLDocument;
-	doc->LoadFile(argv[1]);
+	doc->LoadFile(path);
 
 	const XMLNode* root = doc->FirstChild();
 	const XMLNode* janela = root->FirstChild();
@@ -46,19 +47,19 @@ int main(int argc, char** argv) {
 	processaJanela(janela);
 	processaQuadrado(quadrado);
 
-	glutInitWindowPosition(0, 0); // Position the window's initial top-left corner
+	glutInitWindowPosition(0, 0); 
 	glutInitWindowSize(largura, altura);
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);                 // Initialize GLUT
-	glutCreateWindow(titulo); // Create a window with the given title
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);                 
+	glutCreateWindow(titulo); 
 
 	init();
 
 	glutMotionFunc(dragAndDrop);
 	glutMouseFunc(mouseClick);
-	glutDisplayFunc(display); // Register display callback handler for window re-paint
+	glutDisplayFunc(display); 
 
-	glutMainLoop();           // Enter the infinitely event-processing loop
+	glutMainLoop();           
 	return 0;
 }
 
@@ -120,13 +121,13 @@ void dragAndDrop(int x,int y){
 }
 
 void display() {
-   glClearColor(fundoR,fundoG,fundoB,0); // Set background color to black and opaque
-   glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer
-	 if(drag){
+	glClearColor(fundoR,fundoG,fundoB,0); // Set background color to black and opaque
+	glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer
+	if(drag){
 		drawSquare();
 		drag = false;
-	 }
-   glFlush();  // Render now
+	}
+	glFlush();  // Render now
 }
 
 void init(void){
