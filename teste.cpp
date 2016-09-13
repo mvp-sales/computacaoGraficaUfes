@@ -98,13 +98,13 @@ void mouseClick(int button,int state,int x,int y){
 
 		estadoInsercao = false;
 		estadoAlteracao = true;
-	}else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && !estadoInsercao){
-		if(isSquareArea(x,y)){
+	}else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && !estadoInsercao && isSquareArea(x,y)){
+		//if(isSquareArea(x,y)){
 			glutPostRedisplay();
 			estadoInsercao = true;
 			estadoAlteracao = false;
-		}
-	}else if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && estadoAlteracao){
+		//}
+	}else if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && estadoAlteracao && isSquareArea(x,y)){
 		left_button_pressed = true;
 	}else{
 		left_button_pressed = false;
@@ -112,7 +112,7 @@ void mouseClick(int button,int state,int x,int y){
 }
 
 void dragAndDrop(int x,int y){
-	if(left_button_pressed && isSquareArea(x,y)){
+	if(left_button_pressed){// && isSquareArea(x,y)){
 		quad.centroX = x;
 		quad.centroY = y;
 		drag = true;
