@@ -41,6 +41,9 @@ void mouse(int,int,int,int);
 void keyUp(unsigned char,int,int);
 void keyPress(unsigned char,int,int);
 void idle();
+bool colisaoEnemies();
+bool colisaoCircMaior();
+bool colisao();
 
 int main(int argc, char** argv) {
 	std::string path = argv[1],
@@ -76,11 +79,11 @@ int main(int argc, char** argv) {
 	larguraJanela = biggerCircle.radius * 2;
 	alturaJanela = biggerCircle.radius * 2;
 
-	glutInitWindowPosition(0, 0); 
+	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(larguraJanela, alturaJanela);
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);                      
-	glutCreateWindow("Tela"); 
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutCreateWindow("Tela");
 
 	init();
 
@@ -88,32 +91,63 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyPress);
 	glutKeyboardUpFunc(keyUp);
-	glutIdleFunc(idle); 
+	glutIdleFunc(idle);
 
-	glutMainLoop();    
+	glutMainLoop();
 	return 0;
+}
+
+bool colisaoCircMaior(){
+	double distCentros = sqrt(pow(biggerCircle.centerX - player.centerX,2) +
+														pow(biggerCircle.centerY - player.centerY,2));
+	if(distCentros < biggerCircle.radius - player.radius){
+		return false;
+	}
+	return true;
+}
+
+bool colisao(Circle c){
+	double distCentros = sqrt(pow(c.centerX - player.centerX,2) +
+														pow(c.centerY - player.centerY,2));
+	if(distCentros > c.radius + player.radius){
+		return false;
+	}
+	return true;
+}
+
+bool colisaoEnemies(){
+	for(int i = 0; i < enemies.size(); ++i){
+		if(colisao(enemies.at(i))){
+			return true;
+		}
+	}
+	return false;
 }
 
 void idle(){
 	if(keyStatus['w'] || keyStatus['W']){
-		//if(!colisao()){
-			player.centerY -= 1;
-		//}
+		player.centerY -= 1;
+		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
+			player.centerY += 1;
+		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
-		//if(!colisao()){
-			player.centerY += 1;
-		//}
+		player.centerY += 1;
+		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
+			player.centerY -= 1;
+		}
 	}
 	if(keyStatus['d'] || keyStatus['D']){
-		//if(!colisao()){
-			player.centerX += 1;
-		//} 
+		player.centerX += 1;
+		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
+			player.centerX -= 1;
+		}
 	}
 	if(keyStatus['a'] || keyStatus['A']){
-		//if(!colisao()){
-			player.centerX -= 1;
-		//} 
+		player.centerX -= 1;
+		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
+			player.centerX += 1;
+		}
 	}
 	glutPostRedisplay();
 }
@@ -145,9 +179,9 @@ void drawCircle(Circle c){
 	GLfloat twicePi = 2.0f * M_PI;
 	glBegin(GL_TRIANGLE_FAN);
 		decideColor(c.fill);
-		glVertex3f(c.centerX,alturaJanela - c.centerY,0.0);
+		glVertex3f(c.centerX,c.centerY,0.0);
 		for(int i = 0; i <= 360; i++){
-			glVertex3f(c.centerX + (c.radius * cos(i * twicePi/360)),(alturaJanela-c.centerY) + (c.radius * sin(i * twicePi/360)),0.0);
+			glVertex3f(c.centerX + (c.radius * cos(i * twicePi/360)),c.centerY + (c.radius * sin(i * twicePi/360)),0.0);
 		}
 	glEnd();
 }
@@ -159,15 +193,15 @@ void mouse(int button,int state,int x,int y){
 void drawRectangle(Rectangle r){
 	glBegin(GL_QUADS);
 		decideColor(r.fill);
-		glVertex3f(r.bottomX,alturaJanela - r.bottomY,0.0); // bottom left
-		glVertex3f(r.bottomX,alturaJanela - r.bottomY - r.length,0.0); // top left 
-		glVertex3f(r.bottomX + r.width,alturaJanela - r.bottomY - r.length,0.0); // top right
-		glVertex3f(r.bottomX + r.width, alturaJanela - r.bottomY,0.0); // bottom right
+		glVertex3f(r.bottomX,r.bottomY,0.0); // bottom left
+		glVertex3f(r.bottomX,r.bottomY + r.length,0.0); // top left
+		glVertex3f(r.bottomX + r.width,r.bottomY + r.length,0.0); // top right
+		glVertex3f(r.bottomX + r.width, r.bottomY,0.0); // bottom right
 	glEnd();
 }
 
 void display(){
-	glClearColor(1,1,1,0); 
+	glClearColor(1,1,1,0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	drawCircle(biggerCircle);
@@ -185,7 +219,7 @@ void init(void){
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0.0,larguraJanela,0.0,alturaJanela,-1.0,1.0);
+	glOrtho(0.0,larguraJanela,alturaJanela,0.0,-1.0,1.0);
 }
 
 void processaArquivoSVG(const XMLNode* node){
@@ -199,7 +233,7 @@ void processaArquivoSVG(const XMLNode* node){
 
 			}
 		}else if(!strcmp(elem->Value(),"rect")){
-			
+
 		}
 	}*/
 	node->FirstChild()->ToElement()->QueryFloatAttribute("cx",&biggerCircle.centerX);
