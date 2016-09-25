@@ -64,6 +64,9 @@ int main(int argc, char** argv) {
 	std::string name = elem->FindAttribute("nome")->Value(),
 				ext = elem->FindAttribute("tipo")->Value(),
 				pathSVG = elem->FindAttribute("caminho")->Value(),dot = ".";
+	if(pathSVG.at(0) == '~'){
+		pathSVG = std::string(getenv("HOME")) + pathSVG.substr(1,pathSVG.length()-1);
+	}
 	pathSVG = pathSVG + name + dot+ ext;
 
 	XMLDocument* docSVG = new XMLDocument;
@@ -126,27 +129,27 @@ bool colisaoEnemies(){
 
 void idle(){
 	if(keyStatus['w'] || keyStatus['W']){
-		player.centerY -= 1;
+		player.centerY -= 2;
 		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerY += 1;
+			player.centerY += 2;
 		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
-		player.centerY += 1;
+		player.centerY += 2;
 		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerY -= 1;
+			player.centerY -= 2;
 		}
 	}
 	if(keyStatus['d'] || keyStatus['D']){
-		player.centerX += 1;
+		player.centerX += 2;
 		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerX -= 1;
+			player.centerX -= 2;
 		}
 	}
 	if(keyStatus['a'] || keyStatus['A']){
-		player.centerX -= 1;
+		player.centerX -= 2;
 		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerX += 1;
+			player.centerX += 2;
 		}
 	}
 	glutPostRedisplay();
@@ -219,51 +222,43 @@ void init(void){
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0.0,larguraJanela,alturaJanela,0.0,-1.0,1.0);
+	glOrtho(biggerCircle.centerX-biggerCircle.radius,biggerCircle.centerX+biggerCircle.radius,
+			biggerCircle.centerY+biggerCircle.radius,biggerCircle.centerY-biggerCircle.radius,
+			-1.0,1.0);
 }
 
 void processaArquivoSVG(const XMLNode* node){
-	/*for(const XMLNode* sonNode = node->FirstChild(); sonNode != nullptr; sonNode = sonNode->NextSibling()){
+	for(const XMLNode* sonNode = node->FirstChild(); sonNode != nullptr; sonNode = sonNode->NextSibling()){
 		const XMLElement* elem = sonNode->ToElement();
-		if(!strcmp(elem->Value(),"circle")){
-			if(!strcmp(elem->Attribute("id"),"Pista")){
-				elem->QueryIntAttribute("cx",&biggerCircle.centerX);
-				elem->QueryIntAttribute("cy",&biggerCircle.centerY);
-				elem->QueryIntAttribute("r",&biggerCircle.radius);
-
-			}
-		}else if(!strcmp(elem->Value(),"rect")){
-
+		const char* color = elem->Attribute("fill");
+		if(!strcmp(color,"blue")){
+			elem->QueryFloatAttribute("cx",&biggerCircle.centerX);
+			elem->QueryFloatAttribute("cy",&biggerCircle.centerY);
+			elem->QueryFloatAttribute("r",&biggerCircle.radius);
+			biggerCircle.fill = color;
+		}else if(!strcmp(color,"white")){
+				elem->QueryFloatAttribute("cx",&smallerCircle.centerX);
+				elem->QueryFloatAttribute("cy",&smallerCircle.centerY);
+				elem->QueryFloatAttribute("r",&smallerCircle.radius);
+				smallerCircle.fill = color;
+		}else if(!strcmp(color,"red")){
+				Circle enemy;
+				elem->QueryFloatAttribute("cx",&enemy.centerX);
+				elem->QueryFloatAttribute("cy",&enemy.centerY);
+				elem->QueryFloatAttribute("r",&enemy.radius);
+				enemy.fill = color;
+				enemies.push_back(enemy);
+		}else if(!strcmp(color,"black")){
+				elem->QueryFloatAttribute("x",&finishLine.bottomX);
+				elem->QueryFloatAttribute("y",&finishLine.bottomY);
+				elem->QueryFloatAttribute("width",&finishLine.width);
+				elem->QueryFloatAttribute("height",&finishLine.length);
+				finishLine.fill = elem->Attribute("fill");
+		}else{
+			elem->QueryFloatAttribute("cx",&player.centerX);
+			elem->QueryFloatAttribute("cy",&player.centerY);
+			elem->QueryFloatAttribute("r",&player.radius);
+			player.fill = elem->Attribute("fill");
 		}
-	}*/
-	node->FirstChild()->ToElement()->QueryFloatAttribute("cx",&biggerCircle.centerX);
-	node->FirstChild()->ToElement()->QueryFloatAttribute("cy",&biggerCircle.centerY);
-	node->FirstChild()->ToElement()->QueryFloatAttribute("r",&biggerCircle.radius);
-	biggerCircle.fill = node->FirstChild()->ToElement()->Attribute("fill");
-
-	node->FirstChild()->NextSibling()->ToElement()->QueryFloatAttribute("cx",&smallerCircle.centerX);
-	node->FirstChild()->NextSibling()->ToElement()->QueryFloatAttribute("cy",&smallerCircle.centerY);
-	node->FirstChild()->NextSibling()->ToElement()->QueryFloatAttribute("r",&smallerCircle.radius);
-	smallerCircle.fill = node->FirstChild()->NextSibling()->ToElement()->Attribute("fill");
-
-	node->FirstChild()->NextSibling()->NextSibling()->ToElement()->QueryFloatAttribute("x",&finishLine.bottomX);
-	node->FirstChild()->NextSibling()->NextSibling()->ToElement()->QueryFloatAttribute("y",&finishLine.bottomY);
-	node->FirstChild()->NextSibling()->NextSibling()->ToElement()->QueryFloatAttribute("width",&finishLine.width);
-	node->FirstChild()->NextSibling()->NextSibling()->ToElement()->QueryFloatAttribute("height",&finishLine.length);
-	finishLine.fill = node->FirstChild()->NextSibling()->NextSibling()->ToElement()->Attribute("fill");
-
-	for(const XMLNode* sonNode = node->FirstChild()->NextSibling()->NextSibling(); strcmp(sonNode->ToElement()->Attribute("id"),"Jogador"); sonNode = sonNode->NextSibling()){
-		const XMLElement* elem = sonNode->ToElement();
-		Circle enemy;
-		elem->QueryFloatAttribute("cx",&enemy.centerX);
-		elem->QueryFloatAttribute("cy",&enemy.centerY);
-		elem->QueryFloatAttribute("r",&enemy.radius);
-		enemy.fill = elem->Attribute("fill");
-		enemies.push_back(enemy);
 	}
-
-	node->LastChild()->ToElement()->QueryFloatAttribute("cx",&player.centerX);
-	node->LastChild()->ToElement()->QueryFloatAttribute("cy",&player.centerY);
-	node->LastChild()->ToElement()->QueryFloatAttribute("r",&player.radius);
-	player.fill = node->LastChild()->ToElement()->Attribute("fill");
 }
