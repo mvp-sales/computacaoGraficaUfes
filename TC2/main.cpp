@@ -1,11 +1,6 @@
 #include <GL/freeglut.h>
-#include <cstdlib>
-#include <iostream>
-#include <vector>
-#include <cmath>
 #include "tinyxml2.h"
-
-#define _USE_MATH_DEFINES
+#include "util.h"
 
 //NAMESPACES
 using tinyxml2::XMLDocument;
@@ -13,16 +8,6 @@ using tinyxml2::XMLNode;
 using tinyxml2::XMLElement;
 using std::cout;
 using std::vector;
-
-struct Circle{
-	float centerX,centerY,radius;
-	std::string fill,id;
-};
-
-struct Rectangle{
-	float bottomX,bottomY,width,length;
-	std::string fill,id;
-};
 
 int alturaJanela,larguraJanela;
 Circle biggerCircle, smallerCircle, player;
@@ -32,52 +17,21 @@ Rectangle finishLine;
 bool keyStatus[256];
 
 
+void processaConfig(std::string path);
 void processaArquivoSVG(const XMLNode* node);
 void display();
 void init(void);
-void decideColor(std::string color);
-void drawCircle(Circle c);
 void mouse(int,int,int,int);
 void keyUp(unsigned char,int,int);
 void keyPress(unsigned char,int,int);
 void idle();
-bool colisaoEnemies();
-bool colisaoCircMaior();
-bool colisao();
 
 int main(int argc, char** argv) {
 	std::string path = argv[1],
 				filename = "config.xml";
 	path = path + filename;
 
-	XMLDocument* doc = new XMLDocument;
-	if(doc->LoadFile(path.c_str())){
-		printf("Erro na leitura do arquivo config.xml");
-		exit(1);
-	}
-
-	const XMLNode* root = doc->FirstChild();
-	const XMLNode* svgLine = root->FirstChild();
-
-	const XMLElement* elem = svgLine->ToElement();
-
-	std::string name = elem->FindAttribute("nome")->Value(),
-				ext = elem->FindAttribute("tipo")->Value(),
-				pathSVG = elem->FindAttribute("caminho")->Value(),dot = ".";
-	if(pathSVG.at(0) == '~'){
-		pathSVG = std::string(getenv("HOME")) + pathSVG.substr(1,pathSVG.length()-1);
-	}
-	pathSVG = pathSVG + name + dot+ ext;
-
-	XMLDocument* docSVG = new XMLDocument;
-	if(docSVG->LoadFile(pathSVG.c_str())){
-		printf("Erro na leitura do arquivo arena.svg\n");
-		exit(1);
-	}
-
-	const XMLNode* rootSVG = docSVG->FirstChild();
-
-	processaArquivoSVG(rootSVG);
+	processaConfig(path);
 
 	larguraJanela = biggerCircle.radius * 2;
 	alturaJanela = biggerCircle.radius * 2;
@@ -100,56 +54,29 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-bool colisaoCircMaior(){
-	double distCentros = sqrt(pow(biggerCircle.centerX - player.centerX,2) +
-														pow(biggerCircle.centerY - player.centerY,2));
-	if(distCentros < biggerCircle.radius - player.radius){
-		return false;
-	}
-	return true;
-}
-
-bool colisao(Circle c){
-	double distCentros = sqrt(pow(c.centerX - player.centerX,2) +
-														pow(c.centerY - player.centerY,2));
-	if(distCentros > c.radius + player.radius){
-		return false;
-	}
-	return true;
-}
-
-bool colisaoEnemies(){
-	for(int i = 0; i < enemies.size(); ++i){
-		if(colisao(enemies.at(i))){
-			return true;
-		}
-	}
-	return false;
-}
-
 void idle(){
 	if(keyStatus['w'] || keyStatus['W']){
-		player.centerY -= 2;
-		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerY += 2;
+		player.centerY -= 1;
+		if(colisaoCircMaior(biggerCircle,player) || colisao(smallerCircle,player) || colisaoEnemies(enemies,player)){
+			player.centerY += 1;
 		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
-		player.centerY += 2;
-		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerY -= 2;
+		player.centerY += 1;
+		if(colisaoCircMaior(biggerCircle,player) || colisao(smallerCircle,player) || colisaoEnemies(enemies,player)){
+			player.centerY -= 1;
 		}
 	}
 	if(keyStatus['d'] || keyStatus['D']){
-		player.centerX += 2;
-		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerX -= 2;
+		player.centerX += 1;
+		if(colisaoCircMaior(biggerCircle,player) || colisao(smallerCircle,player) || colisaoEnemies(enemies,player)){
+			player.centerX -= 1;
 		}
 	}
 	if(keyStatus['a'] || keyStatus['A']){
-		player.centerX -= 2;
-		if(colisaoCircMaior() || colisao(smallerCircle) || colisaoEnemies()){
-			player.centerX += 2;
+		player.centerX -= 1;
+		if(colisaoCircMaior(biggerCircle,player) || colisao(smallerCircle,player) || colisaoEnemies(enemies,player)){
+			player.centerX += 1;
 		}
 	}
 	glutPostRedisplay();
@@ -163,44 +90,8 @@ void keyPress(unsigned char key,int x,int y){
 	keyStatus[key] = true;
 }
 
-void decideColor(std::string color){
-	if(!strcmp(color.c_str(),"red")){
-		glColor3f(1,0,0);
-	}else if(!strcmp(color.c_str(),"blue")){
-		glColor3f(0,0,1);
-	}else if(!strcmp(color.c_str(),"green")){
-		glColor3f(0,1,0);
-	}else if(!strcmp(color.c_str(),"white")){
-		glColor3f(1,1,1);
-	}else{
-		glColor3f(0,0,0);
-	}
-}
-
-void drawCircle(Circle c){
-
-	GLfloat twicePi = 2.0f * M_PI;
-	glBegin(GL_TRIANGLE_FAN);
-		decideColor(c.fill);
-		glVertex3f(c.centerX,c.centerY,0.0);
-		for(int i = 0; i <= 360; i++){
-			glVertex3f(c.centerX + (c.radius * cos(i * twicePi/360)),c.centerY + (c.radius * sin(i * twicePi/360)),0.0);
-		}
-	glEnd();
-}
-
 void mouse(int button,int state,int x,int y){
 	printf("%d e %d\n",x,alturaJanela-y);
-}
-
-void drawRectangle(Rectangle r){
-	glBegin(GL_QUADS);
-		decideColor(r.fill);
-		glVertex3f(r.bottomX,r.bottomY,0.0); // bottom left
-		glVertex3f(r.bottomX,r.bottomY + r.length,0.0); // top left
-		glVertex3f(r.bottomX + r.width,r.bottomY + r.length,0.0); // top right
-		glVertex3f(r.bottomX + r.width, r.bottomY,0.0); // bottom right
-	glEnd();
 }
 
 void display(){
@@ -228,7 +119,7 @@ void init(void){
 }
 
 void processaArquivoSVG(const XMLNode* node){
-	for(const XMLNode* sonNode = node->FirstChild(); sonNode != nullptr; sonNode = sonNode->NextSibling()){
+	for(const XMLNode* sonNode = node->FirstChild(); sonNode != NULL; sonNode = sonNode->NextSibling()){
 		const XMLElement* elem = sonNode->ToElement();
 		const char* color = elem->Attribute("fill");
 		if(!strcmp(color,"blue")){
@@ -261,4 +152,35 @@ void processaArquivoSVG(const XMLNode* node){
 			player.fill = elem->Attribute("fill");
 		}
 	}
+}
+
+void processaConfig(std::string path){
+	XMLDocument* doc = new XMLDocument;
+	if(doc->LoadFile(path.c_str())){
+		printf("Erro na leitura do arquivo config.xml");
+		exit(1);
+	}
+
+	const XMLNode* root = doc->FirstChild();
+	const XMLNode* svgLine = root->FirstChild();
+
+	const XMLElement* elem = svgLine->ToElement();
+
+	std::string name = elem->FindAttribute("nome")->Value(),
+				ext = elem->FindAttribute("tipo")->Value(),
+				pathSVG = elem->FindAttribute("caminho")->Value(),dot = ".";
+	if(pathSVG.at(0) == '~'){
+		pathSVG = std::string(getenv("HOME")) + pathSVG.substr(1,pathSVG.length()-1);
+	}
+	pathSVG = pathSVG + name + dot+ ext;
+
+	XMLDocument* docSVG = new XMLDocument;
+	if(docSVG->LoadFile(pathSVG.c_str())){
+		printf("Erro na leitura do arquivo arena.svg\n");
+		exit(1);
+	}
+
+	const XMLNode* rootSVG = docSVG->FirstChild();
+
+	processaArquivoSVG(rootSVG);
 }
