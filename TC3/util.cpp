@@ -80,9 +80,9 @@ void Rectangle::drawRectangle(){
 void Carro::draw(){
 	glPushMatrix();
 		glTranslatef(referenceCircle.center.coordX,referenceCircle.center.coordY,0);
+		glRotatef(carPartsAngle,0,0,1);
 
 		glPushMatrix();
-			if(inMovement) glRotatef(wheelAngle,0,0,1);
 			drawRect((1.5)*referenceCircle.radius,(0.5)*referenceCircle.radius,0.604,0.804,0.196);
 
 			glPushMatrix();
@@ -140,7 +140,15 @@ void Carro::draw(){
 }
 
 void Carro::moveAhead(float d){
-	referenceCircle.center.coordY += d;
+	//referenceCircle.center.coordY += d;
+	if(wheelAngle != 0){
+		carPartsAngle += wheelAngle/fabs(wheelAngle);
+	}
+	referenceCircle.center.coordX += (-d)*sin((carPartsAngle+wheelAngle)*M_PI/180);
+	referenceCircle.center.coordY += d*cos(fabs(carPartsAngle-wheelAngle)*M_PI/180);
+	/*if(carPartsAngle != wheelAngle && wheelAngle != 0)
+		carPartsAngle += (wheelAngle-carPartsAngle)/fabs(wheelAngle-carPartsAngle);*/
+	printf("%f e %f\n",carPartsAngle,wheelAngle);
 }
 
 void Carro::turn(float angle){

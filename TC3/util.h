@@ -32,7 +32,7 @@ struct Rectangle{
 };
 
 struct Carro{
-	float wheelAngle,cannonAngle;
+	float wheelAngle,cannonAngle,carPartsAngle;
 	bool inMovement;
 	Circle referenceCircle;
 

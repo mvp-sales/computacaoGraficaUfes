@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
 	alturaJanela = biggerCircle.radius * 2;
 
 	playerCar.wheelAngle = 0;
+	playerCar.carPartsAngle = 0;
 	playerCar.inMovement = false;
 
 	glutInitWindowPosition(0, 0);
@@ -65,22 +66,6 @@ int main(int argc, char** argv) {
 
 
 void idle(){
-	if(keyStatus['w'] || keyStatus['W']){
-		/*player.moveCenterY(-movY);
-		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-			player.moveCenterY(movY);
-		}*/
-		playerCar.inMovement = true;
-		playerCar.moveAhead(-1);
-	}
-	if(keyStatus['s'] || keyStatus['S']){
-		/*player.moveCenterY(movY);
-		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-			player.moveCenterY(-movY);
-		}*/
-			playerCar.inMovement = true;
-			playerCar.moveAhead(1);
-	}
 	if(keyStatus['d'] || keyStatus['D']){
 		if(playerCar.wheelAngle < 45)
 			playerCar.turn(1);
@@ -94,6 +79,22 @@ void idle(){
 		//if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
 		//	player.moveCenterX(movX);
 		//}
+	}
+	if(keyStatus['w'] || keyStatus['W']){
+		/*player.moveCenterY(-movY);
+		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
+			player.moveCenterY(movY);
+		}*/
+		//playerCar.inMovement = true;
+		playerCar.moveAhead(-1);
+	}
+	if(keyStatus['s'] || keyStatus['S']){
+		/*player.moveCenterY(movY);
+		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
+			player.moveCenterY(-movY);
+		}*/
+			//playerCar.inMovement = true;
+			playerCar.moveAhead(1);
 	}
 	glutPostRedisplay();
 }
