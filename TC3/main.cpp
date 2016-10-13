@@ -80,6 +80,13 @@ void idle(){
 		//	player.moveCenterX(movX);
 		//}
 	}
+	if(!keyStatus['a'] && !keyStatus['A'] && !keyStatus['d'] && !keyStatus['D']){
+		if(wheelAngle != 0){
+			//wheelAngle -= wheelAngle/fabs(wheelAngle);
+			player.turn(-wheelAngle/fabs(wheelAngle));
+		}
+		//7player.turn(-wheelAngle/fabs(wheelAngle));
+	}
 	if(keyStatus['w'] || keyStatus['W']){
 		/*player.moveCenterY(-movY);
 		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
@@ -154,6 +161,3 @@ void init(void){
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
-
-
-

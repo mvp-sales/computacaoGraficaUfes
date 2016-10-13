@@ -142,10 +142,11 @@ void Carro::draw(){
 void Carro::moveAhead(float d){
 	//referenceCircle.center.coordY += d;
 	if(wheelAngle != 0){
-		carPartsAngle += wheelAngle/fabs(wheelAngle);
+		//carPartsAngle += wheelAngle/fabs(wheelAngle);
+		carPartsAngle += (0.5)*wheelAngle/fabs(wheelAngle);
 	}
-	referenceCircle.center.coordX += (-d)*sin((carPartsAngle+wheelAngle)*M_PI/180);
-	referenceCircle.center.coordY += d*cos(fabs(carPartsAngle-wheelAngle)*M_PI/180);
+	referenceCircle.center.coordX += /*(-d)**/carSpeed*sin(wheelAngle*M_PI/180);
+	referenceCircle.center.coordY += carSpeed*d*cos(wheelAngle*M_PI/180);
 	/*if(carPartsAngle != wheelAngle && wheelAngle != 0)
 		carPartsAngle += (wheelAngle-carPartsAngle)/fabs(wheelAngle-carPartsAngle);*/
 	printf("%f e %f\n",carPartsAngle,wheelAngle);
@@ -304,6 +305,11 @@ void processaConfig(std::string path,Circle& biggerCircle,Circle& smallerCircle,
 	const XMLNode* rootSVG = docSVG->FirstChild();
 
 	processaArquivoSVG(rootSVG,biggerCircle,smallerCircle,player,enemies,finishLine);
+
+	const XMLNode* carroAttr = rootSVG->NextSibling();
+	const XMLElement* carroAttrElem = carroAttr->ToElement();
+	carroAttrElem->QueryFloatAttribute("velTiro",&player.bulletSpeed);
+	carroAttrElem->QueryFloatAttribute("velCarro",&player.carSpeed);
 
 	delete doc;
 	delete docSVG;
