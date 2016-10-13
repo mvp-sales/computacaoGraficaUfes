@@ -1,5 +1,6 @@
 #include <GL/freeglut.h>
 #include "util.h"
+#include <math.h>
 
 // QUANTIDADE DE MOVIMENTO EM X E EM Y
 #define movX 1.0
@@ -81,9 +82,9 @@ void idle(){
 		//}
 	}
 	if(!keyStatus['a'] && !keyStatus['A'] && !keyStatus['d'] && !keyStatus['D']){
-		if(wheelAngle != 0){
+		if(playerCar.wheelAngle != 0){
 			//wheelAngle -= wheelAngle/fabs(wheelAngle);
-			player.turn(-wheelAngle/fabs(wheelAngle));
+			playerCar.turn(-playerCar.wheelAngle/fabs(playerCar.wheelAngle));
 		}
 		//7player.turn(-wheelAngle/fabs(wheelAngle));
 	}
