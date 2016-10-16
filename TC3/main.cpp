@@ -1,6 +1,7 @@
 #include <GL/freeglut.h>
 #include "util.h"
 #include <math.h>
+#include <list>
 
 // QUANTIDADE DE MOVIMENTO EM X E EM Y
 #define movX 1.0
@@ -9,12 +10,14 @@
 //NAMESPACES
 using std::cout;
 using std::vector;
+using std::list;
 
 // GLOBAL VARIABLES
 int alturaJanela,larguraJanela;
-Circle biggerCircle, smallerCircle, player;
+Circle biggerCircle, smallerCircle;
 Carro playerCar;
 vector<Circle> enemies;
+list<Bullet> bulletClub;
 Rectangle finishLine;
 
 bool keyStatus[256];
@@ -25,8 +28,9 @@ void init(void);
 void keyUp(unsigned char,int,int);
 void keyPress(unsigned char,int,int);
 void idle();
-
-
+void mouseMotion(int,int);
+void mouseClick(int button,int state,int x,int y);
+bool isOutsideScreen(Bullet&);
 
 
 
@@ -43,7 +47,7 @@ int main(int argc, char** argv) {
 
 	playerCar.wheelAngle = 0;
 	playerCar.carPartsAngle = 0;
-	playerCar.inMovement = false;
+	playerCar.cannonAngle = 0;
 
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(larguraJanela, alturaJanela);
@@ -53,6 +57,8 @@ int main(int argc, char** argv) {
 
 	init();
 
+	glutMouseFunc(mouseClick);
+	glutPassiveMotionFunc(mouseMotion);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyPress);
 	glutKeyboardUpFunc(keyUp);
@@ -62,47 +68,107 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+bool isOutsideScreen(Bullet& b){
+	if(b.position.coordX < biggerCircle.center.coordX-biggerCircle.radius ||
+		b.position.coordX > biggerCircle.center.coordX+biggerCircle.radius){
+			return true;
+		}else if(b.position.coordY > biggerCircle.center.coordY+biggerCircle.radius ||
+				b.position.coordY < biggerCircle.center.coordY-biggerCircle.radius){
+					return true;
+				}
+	return false;
+}
 
+void mouseMotion(int x,int y){
+	static double prevPosX = playerCar.referenceCircle.center.coordX;
+	if(x - prevPosX < 0){
+		if(playerCar.cannonAngle > -45)
+			playerCar.cannonAngle -= 1;
+	}else if(x - prevPosX > 0){
+		if(playerCar.cannonAngle < 45)
+			playerCar.cannonAngle += 1;
+	}
+	prevPosX = x;
 
+}
+
+void mouseClick(int button,int state,int x,int y){
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+		Bullet* newBullet = new Bullet(playerCar.bulletSpeed,playerCar.carPartsAngle,
+										playerCar.cannonAngle,playerCar.referenceCircle.radius,
+										playerCar.referenceCircle.center);
+		newBullet->draw();
+		bulletClub.push_back(*newBullet);
+		delete newBullet;
+	}
+}
 
 
 void idle(){
+	static GLdouble previousTime = 0;
+    GLdouble currentTime;
+    GLdouble timeDiference;
+	int dx = 0;
+
+	currentTime = glutGet(GLUT_ELAPSED_TIME);
+    timeDiference = currentTime - previousTime; // Elapsed time from the previous frame.
+    previousTime = currentTime; //Update previous time
+
 	if(keyStatus['d'] || keyStatus['D']){
+
 		if(playerCar.wheelAngle < 45)
-			playerCar.turn(1);
-		//if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-		//	player.moveCenterX(-movX);
-		//}
+			playerCar.turn(0.5);
+		dx = 1;
+
 	}
 	if(keyStatus['a'] || keyStatus['A']){
+
 		if(playerCar.wheelAngle > -45)
-			playerCar.turn(-1);
-		//if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-		//	player.moveCenterX(movX);
-		//}
+			playerCar.turn(-0.5);
+		dx = -1;
+
 	}
 	if(!keyStatus['a'] && !keyStatus['A'] && !keyStatus['d'] && !keyStatus['D']){
+
 		if(playerCar.wheelAngle != 0){
-			//wheelAngle -= wheelAngle/fabs(wheelAngle);
-			playerCar.turn(-playerCar.wheelAngle/fabs(playerCar.wheelAngle));
+			playerCar.turn(-1*playerCar.wheelAngle/fabs(playerCar.wheelAngle));
 		}
-		//7player.turn(-wheelAngle/fabs(wheelAngle));
+
 	}
 	if(keyStatus['w'] || keyStatus['W']){
-		/*player.moveCenterY(-movY);
-		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-			player.moveCenterY(movY);
-		}*/
-		//playerCar.inMovement = true;
-		playerCar.moveAhead(-1);
+		double currentCarAngle = playerCar.carPartsAngle;
+		double currentX = playerCar.referenceCircle.center.coordX,
+				currentY = playerCar.referenceCircle.center.coordY;
+
+		playerCar.moveAhead(-1,dx,timeDiference);
+
+		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
+			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
+			playerCar.referenceCircle.colisaoEnemies(enemies)){
+				playerCar.referenceCircle.center.coordX = currentX;
+				playerCar.referenceCircle.center.coordY = currentY;
+				playerCar.carPartsAngle = currentCarAngle;
+		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
-		/*player.moveCenterY(movY);
-		if(player.colisaoInterna(biggerCircle) || player.colisaoExterna(smallerCircle) || player.colisaoEnemies(enemies)){
-			player.moveCenterY(-movY);
-		}*/
-			//playerCar.inMovement = true;
-			playerCar.moveAhead(1);
+		double currentCarAngle = playerCar.carPartsAngle;
+		double currentX = playerCar.referenceCircle.center.coordX,
+				currentY = playerCar.referenceCircle.center.coordY;
+
+		playerCar.moveAhead(1,dx,timeDiference);
+
+		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
+			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
+			playerCar.referenceCircle.colisaoEnemies(enemies)){
+				playerCar.referenceCircle.center.coordX = currentX;
+				playerCar.referenceCircle.center.coordY = currentY;
+				playerCar.carPartsAngle = currentCarAngle;
+		}
+	}
+
+	bulletClub.remove_if(isOutsideScreen);
+	for(list<Bullet>::iterator it = bulletClub.begin(); it != bulletClub.end(); ++it){
+		it->updatePosition(timeDiference);
 	}
 	glutPostRedisplay();
 }
@@ -112,9 +178,6 @@ void idle(){
 
 
 void keyUp(unsigned char key,int x,int y){
-	if(key == 'w' || key == 's'){
-		playerCar.inMovement = false;
-	}
 	keyStatus[key] = false;
 }
 
@@ -140,9 +203,10 @@ void display(){
 	for(int i = 0; i < enemies.size(); i++){
 		enemies.at(i).drawCircle();
 	}
-	//player.drawCircle();
-	//playerCar.referenceCircle.drawCircle();
 	playerCar.draw();
+	for(list<Bullet>::iterator it = bulletClub.begin(); it != bulletClub.end(); ++it){
+		it->draw();
+	}
 	glutSwapBuffers();
 }
 
