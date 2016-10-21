@@ -1,6 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include "util.h"
+#include "Carro.h"
 
 #define triangleAmount 360
 
@@ -74,214 +75,60 @@ void Rectangle::drawRectangle(){
 }
 
 
+/*Carro::Carro(){
+	wheelAngle = 0;
+	carPartsAngle = 0;
+	cannonAngle = 0;
+	inMovement = false;
 
+	bPosLine1 = bPosLine2 = bPosLine3 =
+}*/
 
-void Carro::draw(){
+void drawQuarterCircle(double dx,double dy,double x,double rotation){
 	glPushMatrix();
-		glTranslated(referenceCircle.center.coordX,referenceCircle.center.coordY,0);
-		glRotated(carPartsAngle,0,0,1);
+		glTranslated(dx,dy,0);
+		glRotated(rotation,0,0,1);
+		glBegin    (GL_TRIANGLE_FAN);
+		    glVertex2d (0,0);
+		    for (int i = 0; i <= 100; i++) {
+		        double angle = 0.5f*M_PI*i/100;
+		        glVertex2d (cos(angle)*x,sin(angle)*x);
 
-		glPushMatrix();
-			drawRect((1.5)*referenceCircle.radius,(0.5)*referenceCircle.radius,0.604,0.804,0.196);
-
-			glPushMatrix();
-				glTranslated(-(0.375)*referenceCircle.radius,-(1/3.0)*referenceCircle.radius,0);
-				drawRect((0.125)*referenceCircle.radius,(0.25)*referenceCircle.radius,0.118,0.565,1.0);
-			glPopMatrix();
-
-			glPushMatrix();
-				glTranslated((0.375)*referenceCircle.radius,-(1/3.0)*referenceCircle.radius,0);
-				drawRect((0.125)*referenceCircle.radius,(0.25)*referenceCircle.radius,0.118,0.565,1.0);
-			glPopMatrix();
-
-			glPushMatrix();
-				glTranslated((0.375)*referenceCircle.radius,(1/3.0)*referenceCircle.radius,0);
-				drawRect((0.125)*referenceCircle.radius,(0.25)*referenceCircle.radius,0.118,0.565,1.0);
-			glPopMatrix();
-
-			glPushMatrix();
-				glTranslated(-(0.375)*referenceCircle.radius,(1/3.0)*referenceCircle.radius,0);
-				drawRect((0.125)*referenceCircle.radius,(0.25)*referenceCircle.radius,0.118,0.565,1.0);
-			glPopMatrix();
-
-			glPushMatrix();
-				glTranslated(0,-(0.75)*referenceCircle.radius,0);
-				glRotated(cannonAngle,0,0,1);
-				glTranslated(0,-0.125*referenceCircle.radius,0);
-				drawRect((0.25)*referenceCircle.radius,(0.1)*referenceCircle.radius,34.0/255,139.0/255,34.0/255);
-			glPopMatrix();
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslated((0.625)*referenceCircle.radius,-(1/3.0)*referenceCircle.radius,0);
-			glRotated(wheelAngle,0,0,1);
-			drawWheel(referenceCircle.radius/4 + referenceCircle.radius/5,referenceCircle.radius/5);
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslated(-(0.625)*referenceCircle.radius,-(1/3.0)*referenceCircle.radius,0);
-			glRotated(wheelAngle,0,0,1);
-			drawWheel(referenceCircle.radius/4 + referenceCircle.radius/5,referenceCircle.radius/5);
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslated((0.625)*referenceCircle.radius,(1/3.0)*referenceCircle.radius,0);
-			//glRotated(wheelAngle,0,0,1);
-			drawWheel(referenceCircle.radius/4 + referenceCircle.radius/5,referenceCircle.radius/5);
-		glPopMatrix();
-
-		glPushMatrix();
-			glTranslated(-(0.625)*referenceCircle.radius,(1/3.0)*referenceCircle.radius,0);
-			//glRotated(wheelAngle,0,0,1);
-			drawWheel(referenceCircle.radius/4 + referenceCircle.radius/5,referenceCircle.radius/5);
-		glPopMatrix();
-	glPopMatrix();
-
-
-}
-
-void Carro::moveAhead(int dy,int dx,GLdouble timediff){
-
-	if(dy == 1 && dx == 1){
-		referenceCircle.center.coordX += carSpeed*timediff*sin((-carPartsAngle+wheelAngle)*M_PI/180);
-		referenceCircle.center.coordY += timediff*carSpeed*dy*cos((-carPartsAngle+wheelAngle)*M_PI/180);
-
-		if(wheelAngle != 0){
-			carPartsAngle += (-1)*(0.5)*wheelAngle/fabs(wheelAngle);
-		}
-	}else if(dy == 1 && dx == -1){
-		referenceCircle.center.coordX += carSpeed*timediff*sin((-carPartsAngle+wheelAngle)*M_PI/180);
-		referenceCircle.center.coordY += timediff*carSpeed*dy*cos((-carPartsAngle+wheelAngle)*M_PI/180);
-
-		if(wheelAngle != 0){
-			carPartsAngle += (-1)*(0.5)*wheelAngle/fabs(wheelAngle);
-		}
-	}else{
-		referenceCircle.center.coordX += (-dy)*carSpeed*timediff*sin((carPartsAngle+wheelAngle)*M_PI/180);
-		referenceCircle.center.coordY += timediff*carSpeed*dy*cos((carPartsAngle+wheelAngle)*M_PI/180);
-
-		if(wheelAngle != 0){
-			carPartsAngle += (0.5)*wheelAngle/fabs(wheelAngle);
-		}
-	}
-
-}
-
-void Carro::turn(double angle){
-	wheelAngle += angle;
-}
-
-
-Bullet::Bullet(double speed,double angleCar,double angleCannon,double carRadius,Point position){
-	this->speed = speed;
-	this->angleCar = angleCar;
-	this->angleCannon = angleCannon;
-	this->carRadius = carRadius;
-	this->position = position;
-}
-
-
-void Bullet::updatePosition(GLdouble timeDiff){
-	position.coordX += timeDiff*speed*sin((angleCar+angleCannon)*M_PI/180);
-	position.coordY += (-1)*timeDiff*speed*cos((angleCar+angleCannon)*M_PI/180);
-}
-
-void Bullet::draw(){
-	glPushMatrix();
-		glTranslated(position.coordX,position.coordY,0);
-		glRotated(angleCar,0,0,1);
-		glTranslated(0,(-0.75)*carRadius,0);
-		glRotated(angleCannon,0,0,1);
-		glTranslated(0,(-0.3)*carRadius,0);
-		drawRect(0.1*carRadius,0.1*carRadius,0.0,0.0,0.0);
+		    }
+	    glEnd ();
 	glPopMatrix();
 }
-
 
 
 void drawWheel(double h,double w){
 
 	double x = fabs(h/2 - w);
 	glPushMatrix();
-	drawRect(h,w,0.2,0.2,0.2);
+		drawRect(h,w,0.4,0.4,0.4);
 
+
+		drawQuarterCircle(-w/2,h/2,x,90);
+		drawQuarterCircle(w/2,h/2,x,0);
+		drawQuarterCircle(-w/2,-h/2,x,180);
+		drawQuarterCircle(-w/2,-h/2,x,-90);
+
+
+		drawPartWheel(-w/2-x/2,0,-90,x,h);
+		drawPartWheel(w/2+x/2,0,90,x,h);
+		drawPartWheel(0,-h/2-x/2,0,x,w);
+		drawPartWheel(0,h/2+x/2,0,x,w);
+
+	glPopMatrix();
+
+}
+
+
+void drawPartWheel(double dx,double dy,double rotation,double h,double w){
 	glPushMatrix();
-		glTranslated(-w/2,h/2,0);
-		glRotated(90,0,0,1);
-		glBegin    (GL_TRIANGLE_FAN);
-	    glVertex2d (0,0);
-	    for (int i = 0; i <= 100; i++) {
-	        double angle = 0.5f*M_PI*i/100;
-	        glVertex2d (cos(angle)*x,sin(angle)*x);
-
-	    }
-	    glEnd ();
+		glTranslated(dx,dy,0);
+		glRotated(rotation,0,0,1);
+		drawRect(h,w,0.2,0.2,0.2);
 	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(w/2,h/2,0);
-		glBegin    (GL_TRIANGLE_FAN);
-	    glVertex2d (0,0);
-	    for (int i = 0; i <= 100; i++) {
-	        double angle = 0.5f*M_PI*i/100;
-	        glVertex2d (cos(angle)*x,sin(angle)*x);
-
-	    }
-	    glEnd ();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(-w/2,-h/2,0);
-		glRotated(180,0,0,1);
-		glBegin    (GL_TRIANGLE_FAN);
-	    glVertex2d (0,0);
-	    for (int i = 0; i <= 100; i++) {
-	        double angle = 0.5f*M_PI*i/100;
-	        glVertex2d (cos(angle)*x,sin(angle)*x);
-
-	    }
-	    glEnd ();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(w/2,-h/2,0);
-		glRotated(-90,0,0,1);
-		glBegin    (GL_TRIANGLE_FAN);
-	    glVertex2d (0,0);
-	    for (int i = 0; i <= 100; i++) {
-	        double angle = 0.5f*M_PI*i/100;
-	        glVertex2d (cos(angle)*x,sin(angle)*x);
-
-	    }
-	    glEnd ();
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(-w/2-x/2,0,0);
-		glRotated(-90,0,0,1);
-		drawRect(x,h,0.2,0.2,0.2);
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(w/2+x/2,0,0);
-		glRotated(90,0,0,1);
-		drawRect(x,h,0.2,0.2,0.2);
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(0,-h/2-x/2,0);
-		drawRect(x,w,0.2,0.2,0.2);
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslated(0,h/2+x/2,0);
-		drawRect(x,w,0.2,0.2,0.2);
-	glPopMatrix();
-
-	glPopMatrix();
-
-	//return h + 2*x;
-
 }
 
 
@@ -297,6 +144,18 @@ void drawRect(double h,double w,double R,double G,double B){
 	glEnd();
 }
 
+void drawCirc(double r,double R,double G,double B){
+	double x,y;
+	glColor3f(R,G,B);
+	glBegin(GL_TRIANGLE_FAN);
+		for(double i = 0; i <= 360.0; i+= 1.0){
+			x = r * cos(M_PI*i/180);
+			y = r * sin(M_PI*i/180);
+			glVertex3d(x,y,0);
+		}
+	glEnd();
+
+}
 
 
 void decideColor(std::string color){
@@ -393,6 +252,7 @@ void processaArquivoSVG(const XMLNode* node, Circle& biggerCircle,Circle& smalle
 			elem->QueryDoubleAttribute("cy",&player.referenceCircle.center.coordY);
 			elem->QueryDoubleAttribute("r",&player.referenceCircle.radius);
 			player.referenceCircle.fill = elem->Attribute("fill");
+			player.setBasePos();
 		}
 	}
 }

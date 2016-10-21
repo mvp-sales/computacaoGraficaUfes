@@ -1,5 +1,5 @@
 #include <GL/freeglut.h>
-#include "util.h"
+#include "Carro.h"
 #include <math.h>
 #include <list>
 
@@ -48,6 +48,7 @@ int main(int argc, char** argv) {
 	playerCar.wheelAngle = 0;
 	playerCar.carPartsAngle = 0;
 	playerCar.cannonAngle = 0;
+	playerCar.inMovement = false;
 
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(larguraJanela, alturaJanela);
@@ -113,6 +114,7 @@ void idle(){
 	currentTime = glutGet(GLUT_ELAPSED_TIME);
     timeDiference = currentTime - previousTime; // Elapsed time from the previous frame.
     previousTime = currentTime; //Update previous time
+	playerCar.inMovement = false;
 
 	if(keyStatus['d'] || keyStatus['D']){
 
@@ -128,13 +130,7 @@ void idle(){
 		dx = -1;
 
 	}
-	if(!keyStatus['a'] && !keyStatus['A'] && !keyStatus['d'] && !keyStatus['D']){
 
-		if(playerCar.wheelAngle != 0){
-			playerCar.turn(-1*playerCar.wheelAngle/fabs(playerCar.wheelAngle));
-		}
-
-	}
 	if(keyStatus['w'] || keyStatus['W']){
 		double currentCarAngle = playerCar.carPartsAngle;
 		double currentX = playerCar.referenceCircle.center.coordX,
@@ -148,6 +144,7 @@ void idle(){
 				playerCar.referenceCircle.center.coordX = currentX;
 				playerCar.referenceCircle.center.coordY = currentY;
 				playerCar.carPartsAngle = currentCarAngle;
+				playerCar.inMovement = false;
 		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
@@ -163,6 +160,7 @@ void idle(){
 				playerCar.referenceCircle.center.coordX = currentX;
 				playerCar.referenceCircle.center.coordY = currentY;
 				playerCar.carPartsAngle = currentCarAngle;
+				playerCar.inMovement = false;
 		}
 	}
 
