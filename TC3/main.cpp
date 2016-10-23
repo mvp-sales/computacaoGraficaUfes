@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
 	playerCar.wheelAngle = 0;
 	playerCar.carPartsAngle = 0;
 	playerCar.cannonAngle = 0;
-	playerCar.inMovement = false;
 
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(larguraJanela, alturaJanela);
@@ -95,9 +94,8 @@ void mouseMotion(int x,int y){
 
 void mouseClick(int button,int state,int x,int y){
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-		Bullet* newBullet = new Bullet(playerCar.bulletSpeed,playerCar.carPartsAngle,
-										playerCar.cannonAngle,playerCar.referenceCircle.radius,
-										playerCar.referenceCircle.center);
+		
+		Bullet* newBullet = new Bullet(playerCar);
 		newBullet->draw();
 		bulletClub.push_back(*newBullet);
 		delete newBullet;
@@ -109,58 +107,48 @@ void idle(){
 	static GLdouble previousTime = 0;
     GLdouble currentTime;
     GLdouble timeDiference;
-	int dx = 0;
 
 	currentTime = glutGet(GLUT_ELAPSED_TIME);
     timeDiference = currentTime - previousTime; // Elapsed time from the previous frame.
     previousTime = currentTime; //Update previous time
-	playerCar.inMovement = false;
 
 	if(keyStatus['d'] || keyStatus['D']){
 
-		if(playerCar.wheelAngle < 45)
-			playerCar.turn(0.5);
-		dx = 1;
+		playerCar.turn(0.05*timeDiference);
 
 	}
 	if(keyStatus['a'] || keyStatus['A']){
 
-		if(playerCar.wheelAngle > -45)
-			playerCar.turn(-0.5);
-		dx = -1;
+		playerCar.turn(-0.05*timeDiference);
 
 	}
+	int dx = playerCar.wheelAngle == 0 ? 0 : playerCar.wheelAngle/fabs(playerCar.wheelAngle);
 
 	if(keyStatus['w'] || keyStatus['W']){
 		double currentCarAngle = playerCar.carPartsAngle;
-		double currentX = playerCar.referenceCircle.center.coordX,
-				currentY = playerCar.referenceCircle.center.coordY;
-
+		Point currentPosition = playerCar.referenceCircle.center;
 		playerCar.moveAhead(-1,dx,timeDiference);
 
 		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
 			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
 			playerCar.referenceCircle.colisaoEnemies(enemies)){
-				playerCar.referenceCircle.center.coordX = currentX;
-				playerCar.referenceCircle.center.coordY = currentY;
+
+				playerCar.referenceCircle.center = currentPosition;
 				playerCar.carPartsAngle = currentCarAngle;
-				playerCar.inMovement = false;
 		}
 	}
 	if(keyStatus['s'] || keyStatus['S']){
 		double currentCarAngle = playerCar.carPartsAngle;
-		double currentX = playerCar.referenceCircle.center.coordX,
-				currentY = playerCar.referenceCircle.center.coordY;
+		Point currentPosition = playerCar.referenceCircle.center;
 
 		playerCar.moveAhead(1,dx,timeDiference);
 
 		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
 			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
 			playerCar.referenceCircle.colisaoEnemies(enemies)){
-				playerCar.referenceCircle.center.coordX = currentX;
-				playerCar.referenceCircle.center.coordY = currentY;
+
+				playerCar.referenceCircle.center = currentPosition;
 				playerCar.carPartsAngle = currentCarAngle;
-				playerCar.inMovement = false;
 		}
 	}
 

@@ -19,13 +19,16 @@ double Point::distPoints(Point p){
 
 void Circle::drawCircle(){
 	GLdouble twicePi = 2.0f * M_PI;
-	glBegin(GL_TRIANGLE_FAN);
-		decideColor(fill);
-		glVertex3d(center.coordX,center.coordY,0.0);
-		for(int i = 0; i <= triangleAmount; i++){
-			glVertex3d(center.coordX + (radius * cos(i * twicePi/triangleAmount)),center.coordY + (radius * sin(i * twicePi/triangleAmount)),0.0);
-		}
-	glEnd();
+	glPushMatrix();
+		glTranslated(center.coordX,center.coordY,0);
+		glBegin(GL_TRIANGLE_FAN);
+			decideColor(fill);
+			glVertex3d(0,0,0.0);
+			for(int i = 0; i <= triangleAmount; i++){
+				glVertex3d(radius * cos(i * twicePi/triangleAmount),radius * sin(i * twicePi/triangleAmount),0.0);
+			}
+		glEnd();
+	glPopMatrix();
 }
 
 void Circle::moveCenterX(double dx){
@@ -73,16 +76,6 @@ void Rectangle::drawRectangle(){
 		glVertex3d(bottomLeft.coordX + width, bottomLeft.coordY,0.0); // bottom right
 	glEnd();
 }
-
-
-/*Carro::Carro(){
-	wheelAngle = 0;
-	carPartsAngle = 0;
-	cannonAngle = 0;
-	inMovement = false;
-
-	bPosLine1 = bPosLine2 = bPosLine3 =
-}*/
 
 void drawQuarterCircle(double dx,double dy,double x,double rotation){
 	glPushMatrix();

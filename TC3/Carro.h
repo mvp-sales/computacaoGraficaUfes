@@ -1,15 +1,17 @@
+#ifndef CARRO_H
+#define CARRO_H
+
 #include "util.h"
 
 struct Carro{
 	double wheelAngle,cannonAngle,carPartsAngle,carSpeed,bulletSpeed;
-	bool inMovement;
 	Circle referenceCircle;
 
 	//Carro();
 	void draw();
 	void moveAhead(int,int,GLdouble);
 	void turn(double);
-	void drawMovement(double,double);
+	void drawMovement();
 	void setBasePos();
 
 	private:
@@ -17,15 +19,19 @@ struct Carro{
 		double bPosLine1,bPosLine2,bPosLine3;
 		void drawSuspensoes(double,double);
 		void drawCarWheel(double,double,bool);
-		void addMovementAnimation(double d);
+		void addMovementAnimation(int d);
 };
 
 struct Bullet{
 	double speed;
 	Point position;
+	Circle referenceCircle;
 	double angleCar,angleCannon,carRadius;
 
-	Bullet(double,double,double,double,Point);
+	//Bullet(double,double,double,double,Point);
+	Bullet(Carro&);
 	void draw();
 	void updatePosition(GLdouble);
 };
+
+#endif
