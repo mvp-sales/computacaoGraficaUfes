@@ -97,7 +97,7 @@ void drawWheel(double h,double w){
 
 	double x = fabs(h/2 - w);
 	glPushMatrix();
-		drawRect(h,w,0.4,0.4,0.4);
+		drawRect(h,w,0.7,0.7,0.7);
 
 
 		drawQuarterCircle(-w/2,h/2,x,90);

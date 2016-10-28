@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(larguraJanela, alturaJanela);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutCreateWindow("Trabalho Curto 2");
+	glutCreateWindow("Trabalho Curto 3");
 
 	init();
 
@@ -94,7 +94,7 @@ void mouseMotion(int x,int y){
 
 void mouseClick(int button,int state,int x,int y){
 	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-		
+
 		Bullet* newBullet = new Bullet(playerCar);
 		newBullet->draw();
 		bulletClub.push_back(*newBullet);
