@@ -22,6 +22,15 @@ double Point::distPoints(Point p){
 }
 
 
+double Circle::getCenterX(){
+	return center.coordX;
+}
+
+double Circle::getCenterY(){
+	return center.coordY;
+}
+
+
 double Circle::getCorR(){
 	return cor->red;
 }
@@ -40,7 +49,6 @@ void Circle::draw(){
 	glPushMatrix();
 		glTranslated(center.coordX,center.coordY,0);
 		glBegin(GL_TRIANGLE_FAN);
-			//decideColor(fill);
 			glColor3d(cor->red,cor->green,cor->blue);
 			glVertex3d(0,0,0.0);
 			for(int i = 0; i <= triangleAmount; i++){
@@ -72,14 +80,6 @@ bool Circle::colisaoInterna(Circle c){
 	return true;
 }
 
-/*bool Circle::colisaoEnemies(std::vector<Circle>& enemies){
-	for(int i = 0; i < enemies.size(); ++i){
-		if(this->colisaoExterna(enemies.at(i))){
-			return true;
-		}
-	}
-	return false;
-}*/
 
 
 
@@ -190,7 +190,7 @@ Color* decideColor(std::string color){
 
 
 void processaConfig(std::string path,Circle& biggerCircle,Circle& smallerCircle,
-						Carro& player,std::vector<Carro>& enemies,Rectangle& finishLine){
+						Carro& player,std::list<Carro>& enemies,Rectangle& finishLine,double& freqTiro){
 	XMLDocument* doc = new XMLDocument;
 	if(doc->LoadFile(path.c_str())){
 		printf("Erro na leitura do arquivo config.xml");
@@ -208,6 +208,17 @@ void processaConfig(std::string path,Circle& biggerCircle,Circle& smallerCircle,
 
 	pathSVG = pathSVG + name + dot+ ext;
 
+	const XMLNode* carroAttr = svgLine->NextSibling();
+	const XMLElement* carroAttrElem = carroAttr->ToElement();
+	carroAttrElem->QueryDoubleAttribute("velTiro",&player.bulletSpeed);
+	carroAttrElem->QueryDoubleAttribute("velCarro",&player.carSpeed);
+
+	double velTiroEnemies,velCarroEnemies;
+	const XMLElement* enemiesAttr = carroAttr->NextSibling()->ToElement();
+	enemiesAttr->QueryDoubleAttribute("velTiro",&velTiroEnemies);
+	enemiesAttr->QueryDoubleAttribute("velCarro",&velCarroEnemies);
+	enemiesAttr->QueryDoubleAttribute("freqTiro",&freqTiro);
+
 	XMLDocument* docSVG = new XMLDocument;
 	if(docSVG->LoadFile(pathSVG.c_str())){
 		printf("Erro na leitura do arquivo arena.svg\n");
@@ -216,12 +227,8 @@ void processaConfig(std::string path,Circle& biggerCircle,Circle& smallerCircle,
 
 	const XMLNode* rootSVG = docSVG->FirstChild();
 
-	processaArquivoSVG(rootSVG,biggerCircle,smallerCircle,player,enemies,finishLine);
+	processaArquivoSVG(rootSVG,biggerCircle,smallerCircle,player,enemies,finishLine,velCarroEnemies,velTiroEnemies);
 
-	const XMLNode* carroAttr = svgLine->NextSibling();
-	const XMLElement* carroAttrElem = carroAttr->ToElement();
-	carroAttrElem->QueryDoubleAttribute("velTiro",&player.bulletSpeed);
-	carroAttrElem->QueryDoubleAttribute("velCarro",&player.carSpeed);
 
 	delete doc;
 	delete docSVG;
@@ -233,7 +240,8 @@ void processaConfig(std::string path,Circle& biggerCircle,Circle& smallerCircle,
 
 
 void processaArquivoSVG(const XMLNode* node, Circle& biggerCircle,Circle& smallerCircle,
-						Carro& player,std::vector<Carro>& enemies,Rectangle& finishLine){
+						Carro& player,std::list<Carro>& enemies,Rectangle& finishLine,
+						double velCarroEnemies,double velTiroEnemies){
 	for(const XMLNode* sonNode = node->FirstChild(); sonNode != NULL; sonNode = sonNode->NextSibling()){
 		const XMLElement* elem = sonNode->ToElement();
 		const char* color = elem->Attribute("fill");
@@ -249,13 +257,21 @@ void processaArquivoSVG(const XMLNode* node, Circle& biggerCircle,Circle& smalle
 				elem->QueryDoubleAttribute("r",&smallerCircle.radius);
 				smallerCircle.cor = cor;
 		}else if(!strcmp(color,"red")){
-				//Circle enemy;
-				Carro enemy = Carro();
+				Carro enemy = Carro(velTiroEnemies,velCarroEnemies);
 				elem->QueryDoubleAttribute("cx",&enemy.referenceCircle.center.coordX);
 				elem->QueryDoubleAttribute("cy",&enemy.referenceCircle.center.coordY);
 				elem->QueryDoubleAttribute("r",&enemy.referenceCircle.radius);
+				
 				enemy.referenceCircle.cor = cor;
 				enemy.setBasePos();
+
+				enemy.dMove = rand() % 2 == 0? -1 : 1;
+				enemy.dWheel = rand() % 2 == 0? 1 : -1;
+				enemy.cannonAngle = rand() % 2 == 0? 1 : -1;
+
+				enemy.rMove = rand() % 5000 + 1000;
+				enemy.rWheel = rand() % 1001;
+
 				enemies.push_back(enemy);
 		}else if(!strcmp(color,"black")){
 				elem->QueryDoubleAttribute("x",&finishLine.bottomLeft.coordX);

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <GL/freeglut.h>
 #include "tinyxml2.h"
 
@@ -28,6 +29,8 @@ struct Circle{
 	std::string fill,id;
 	Color* cor;
 
+	double getCenterX();
+	double getCenterY();
 	double getCorR();
 	double getCorG();
 	double getCorB();
@@ -54,7 +57,7 @@ void drawWheel(double h,double w);
 void drawRect(double h,double w,double R,double G,double B);
 void drawCirc(double r,double R,double G,double B);
 Color* decideColor(std::string);
-void processaConfig(std::string,Circle&,Circle&,Carro&,std::vector<Carro>&,Rectangle&);
-void processaArquivoSVG(const tinyxml2::XMLNode*,Circle&,Circle&,Carro&,std::vector<Carro>&,Rectangle&);
+void processaConfig(std::string,Circle&,Circle&,Carro&,std::list<Carro>&,Rectangle&,double&);
+void processaArquivoSVG(const tinyxml2::XMLNode*,Circle&,Circle&,Carro&,std::list<Carro>&,Rectangle&,double,double);
 
 #endif

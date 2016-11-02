@@ -7,19 +7,33 @@ Carro::Carro(){
 	this->carPartsAngle = 0;
 }
 
-bool Carro::colisaoEnemies(std::vector<Carro>& enemies){
-	for(int i = 0; i < enemies.size(); ++i){
+Carro::Carro(double velTiro,double velCarro){
+	this->carSpeed = velCarro;
+	this->bulletSpeed = velTiro;
+	this->wheelAngle = 0;
+	this->cannonAngle = 0;
+	this->carPartsAngle = 0;
+}
+
+bool Carro::colisaoEnemies(std::list<Carro>& enemies){
+	/*for(int i = 0; i < enemies.size(); ++i){
 		if(this->referenceCircle.colisaoExterna(enemies.at(i).referenceCircle)){
+			return true;
+		}
+	}*/
+	for(std::list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
+		if(this->referenceCircle.colisaoExterna(it->referenceCircle)){
 			return true;
 		}
 	}
 	return false;
 }
 
-void Carro::shoot(){
+void Carro::shoot(std::list<Bullet>& bulletsClub){
 	Bullet* newBullet = new Bullet(*this);
 	//newBullet->draw();
-	bulletClub.push_back(*newBullet);
+	//bulletClub.push_back(*newBullet);
+	bulletsClub.push_back(*newBullet);
 	delete newBullet;
 }
 
@@ -70,7 +84,7 @@ void Carro::draw(){
 				glTranslated(0,-(0.75)*referenceCircle.radius,0);
 				glRotated(cannonAngle,0,0,1);
 				glTranslated(0,-0.125*referenceCircle.radius,0);
-				drawRect((0.25)*referenceCircle.radius,(0.1)*referenceCircle.radius,34.0/255,139.0/255,34.0/255);
+				drawRect((0.25)*referenceCircle.radius,(0.16)*referenceCircle.radius,34.0/255,139.0/255,34.0/255);
 			glPopMatrix();
 		glPopMatrix();
 
@@ -112,9 +126,10 @@ void Carro::addMovementAnimation(int d){
 	}
 }
 
-void Carro::moveAhead(int dy,int dx,GLdouble timediff){
+void Carro::moveAhead(int dy,GLdouble timediff){
+	int dx = wheelAngle == 0 ? 0 : wheelAngle/fabs(wheelAngle);
 
-	if(dy == 1 && (dx == 1 || dx == -1)){
+	if(dy == 1 && dx != 0){
 
 		carPartsAngle += (-1)*wheelAngle*carSpeed*timediff/(1.25*referenceCircle.radius);
 		referenceCircle.moveCenterX(carSpeed*timediff*sin((-carPartsAngle+wheelAngle)*M_PI/180));
@@ -142,11 +157,10 @@ void Carro::turn(double angle){
 
 Bullet::Bullet(Carro& player){
 	this->speed = player.bulletSpeed;
-	this->angleCar = player.carPartsAngle;
-	this->angleCannon = player.cannonAngle;
-	//this->carRadius = player.referenceCircle.radius;
-	//this->position = player.referenceCircle.center;
+	this->angle = player.carPartsAngle+player.cannonAngle;
 
+
+// Determinar a posição do centro da bala
 	double originCannonMatrix[3][3]={{cos(player.carPartsAngle*M_PI/180),-sin(player.carPartsAngle*M_PI/180),player.referenceCircle.center.coordX},
 								{sin(player.carPartsAngle*M_PI/180),cos(player.carPartsAngle*M_PI/180),player.referenceCircle.center.coordY},{0,0,1}};
 	double baseCannonChassiVector[3]={0,-0.75*player.referenceCircle.radius,1};
@@ -160,8 +174,8 @@ Bullet::Bullet(Carro& player){
 
 
 
-	double originBaseCannonMatrix[3][3]={{cos((player.carPartsAngle+player.cannonAngle)*M_PI/180),-sin((player.carPartsAngle+player.cannonAngle)*M_PI/180),baseCannonGlobal[0]},
-										{sin((player.carPartsAngle+player.cannonAngle)*M_PI/180),cos((player.carPartsAngle+player.cannonAngle)*M_PI/180),baseCannonGlobal[1]},{0,0,1}};
+	double originBaseCannonMatrix[3][3]={{cos((this->angle)*M_PI/180),-sin((this->angle)*M_PI/180),baseCannonGlobal[0]},
+										{sin((this->angle)*M_PI/180),cos((this->angle)*M_PI/180),baseCannonGlobal[1]},{0,0,1}};
 	double topCannonVector[3]={0,-0.25*player.referenceCircle.radius,1};
 	double topCannonGlobal[3];
 	for(int i = 0; i < 3; i++){
@@ -172,7 +186,7 @@ Bullet::Bullet(Carro& player){
 	}
 
 
-	this->referenceCircle.radius=0.05*player.referenceCircle.radius;
+	this->referenceCircle.radius=0.08*player.referenceCircle.radius;
 	this->referenceCircle.cor = new Color(0.0,0.0,0.0);
 	this->referenceCircle.center.coordX = topCannonGlobal[0];
 	this->referenceCircle.center.coordY = topCannonGlobal[1];
@@ -181,21 +195,11 @@ Bullet::Bullet(Carro& player){
 
 
 void Bullet::updatePosition(GLdouble timeDiff){
-	//position.coordX += timeDiff*speed*sin((angleCar+angleCannon)*M_PI/180);
-	//position.coordY += (-1)*timeDiff*speed*cos((angleCar+angleCannon)*M_PI/180);
-	this->referenceCircle.center.coordX += timeDiff*speed*sin((angleCar+angleCannon)*M_PI/180);
-	this->referenceCircle.center.coordY += (-1)*timeDiff*speed*cos((angleCar+angleCannon)*M_PI/180);
+	this->referenceCircle.center.coordX += timeDiff*speed*sin((this->angle)*M_PI/180);
+	this->referenceCircle.center.coordY += (-1)*timeDiff*speed*cos((this->angle)*M_PI/180);
 }
 
 void Bullet::draw(){
-	/*glPushMatrix();
-		glTranslated(position.coordX,position.coordY,0);
-		glRotated(angleCar,0,0,1);
-		glTranslated(0,(-0.75)*carRadius,0);
-		glRotated(angleCannon,0,0,1);
-		glTranslated(0,(-0.3)*carRadius,0);
-		drawCirc(0.05*carRadius,0.0,0.0,0.0);
-	glPopMatrix();*/
 	this->referenceCircle.draw();
 }
 

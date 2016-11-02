@@ -8,17 +8,19 @@ struct Bullet;
 
 struct Carro{
 	double wheelAngle,cannonAngle,carPartsAngle,carSpeed,bulletSpeed;
-	std::list<Bullet> bulletClub;
+	int dMove,dWheel,dCannon;
+	int rMove,rWheel;
 	Circle referenceCircle;
 
 	Carro();
+	Carro(double,double);
 	void draw();
-	void moveAhead(int,int,GLdouble);
+	void moveAhead(int,GLdouble);
 	void turn(double);
 	void drawMovement();
 	void setBasePos();
-	void shoot();
-	bool colisaoEnemies(std::vector<Carro>&);
+	void shoot(std::list<Bullet>&);
+	bool colisaoEnemies(std::list<Carro>&);
 
 	private:
 		double dLine1,dLine2,dLine3;
@@ -29,10 +31,9 @@ struct Carro{
 };
 
 struct Bullet{
-	double speed;
+	double speed,angle;
 	Point position;
 	Circle referenceCircle;
-	double angleCar,angleCannon,carRadius;
 
 	//Bullet(double,double,double,double,Point);
 	Bullet(Carro&);

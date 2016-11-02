@@ -1,6 +1,7 @@
 #include <GL/freeglut.h>
 #include "Carro.h"
 #include <math.h>
+#include <time.h>
 #include <list>
 
 // QUANTIDADE DE MOVIMENTO EM X E EM Y
@@ -14,13 +15,18 @@ using std::list;
 
 // GLOBAL VARIABLES
 int alturaJanela,larguraJanela;
+double shootFrequency;
 Circle biggerCircle, smallerCircle;
 Carro playerCar = Carro();
-vector<Carro> enemies;
-list<Bullet> bulletClub;
+list<Carro> enemies;
+list<Bullet> enemyBulletClub,playerBulletClub;
 Rectangle finishLine;
 
-bool keyStatus[256];
+bool keyStatus[256],startGame=false,endGame=false;
+bool check1=false,check2=false,check3=false,winGame=false;
+// Text variable
+static char str[2000];
+void * font = GLUT_BITMAP_9_BY_15;
 
 
 void display();
@@ -31,6 +37,10 @@ void idle();
 void mouseMotion(int,int);
 void mouseClick(int button,int state,int x,int y);
 bool isOutsideScreen(Bullet&);
+void PrintScore(GLfloat x, GLfloat y);
+void moveEnemy(Carro& enemy,GLdouble timeDiff,GLdouble currentTime);
+void verifyCheckpoints();
+bool colisaoBetweenEnemies(Carro& enemy);
 
 
 
@@ -40,20 +50,17 @@ int main(int argc, char** argv) {
 				filename = "config.xml";
 	path = path + filename;
 
-	processaConfig(path,biggerCircle,smallerCircle,playerCar,enemies,finishLine);
+	processaConfig(path,biggerCircle,smallerCircle,playerCar,enemies,finishLine,shootFrequency);
+
 
 	larguraJanela = biggerCircle.radius * 2;
 	alturaJanela = biggerCircle.radius * 2;
-
-	/*playerCar.wheelAngle = 0;
-	playerCar.carPartsAngle = 0;
-	playerCar.cannonAngle = 0;*/
 
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(larguraJanela, alturaJanela);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutCreateWindow("Trabalho Curto 3");
+	glutCreateWindow("Trabalho Curto 4");
 
 	init();
 
@@ -63,7 +70,7 @@ int main(int argc, char** argv) {
 	glutKeyboardFunc(keyPress);
 	glutKeyboardUpFunc(keyUp);
 	glutIdleFunc(idle);
-
+	srand (time(NULL));
 	glutMainLoop();
 	return 0;
 }
@@ -93,19 +100,14 @@ void mouseMotion(int x,int y){
 }
 
 void mouseClick(int button,int state,int x,int y){
-	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-
-		/*Bullet* newBullet = new Bullet(playerCar);
-		//newBullet->draw();
-		bulletClub.push_back(*newBullet);
-		delete newBullet;*/
-		playerCar.shoot();
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && startGame){
+		playerCar.shoot(playerBulletClub);
 	}
 }
 
 
 void idle(){
-	static GLdouble previousTime = 0;
+	static GLdouble previousTime = 0,timeToShoot = 0;
     GLdouble currentTime;
     GLdouble timeDiference;
 
@@ -123,12 +125,12 @@ void idle(){
 		playerCar.turn(-0.05*timeDiference);
 
 	}
-	int dx = playerCar.wheelAngle == 0 ? 0 : playerCar.wheelAngle/fabs(playerCar.wheelAngle);
 
 	if(keyStatus['w'] || keyStatus['W']){
+		if(!startGame) startGame = true;
 		double currentCarAngle = playerCar.carPartsAngle;
 		Point currentPosition = playerCar.referenceCircle.center;
-		playerCar.moveAhead(-1,dx,timeDiference);
+		playerCar.moveAhead(-1,timeDiference);
 
 		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
 			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
@@ -138,11 +140,11 @@ void idle(){
 				playerCar.carPartsAngle = currentCarAngle;
 		}
 	}
-	if(keyStatus['s'] || keyStatus['S']){
+	if((keyStatus['s'] || keyStatus['S']) && startGame){
 		double currentCarAngle = playerCar.carPartsAngle;
 		Point currentPosition = playerCar.referenceCircle.center;
 
-		playerCar.moveAhead(1,dx,timeDiference);
+		playerCar.moveAhead(1,timeDiference);
 
 		if(playerCar.referenceCircle.colisaoInterna(biggerCircle) ||
 			playerCar.referenceCircle.colisaoExterna(smallerCircle) ||
@@ -153,14 +155,39 @@ void idle(){
 		}
 	}
 
-	/*bulletClub.remove_if(isOutsideScreen);
-	for(list<Bullet>::iterator it = bulletClub.begin(); it != bulletClub.end(); ++it){
-		it->updatePosition(timeDiference);
-	}*/
-	playerCar.bulletClub.remove_if(isOutsideScreen);
-	for(list<Bullet>::iterator it = playerCar.bulletClub.begin(); it != playerCar.bulletClub.end(); ++it){
-		it->updatePosition(timeDiference);
+	if(startGame){
+		for(list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
+			moveEnemy(*it,timeDiference,currentTime);
+		}
 	}
+
+
+	for(list<Bullet>::iterator it = playerBulletClub.begin(); it != playerBulletClub.end(); ++it){
+		it->updatePosition(timeDiference);
+		for(list<Carro>::iterator it2 = enemies.begin(); it2 != enemies.end(); ++it2){
+			if(it2->referenceCircle.colisaoExterna(it->referenceCircle)){
+				it2 = enemies.erase(it2);
+			}
+		}
+	}
+	playerBulletClub.remove_if(isOutsideScreen);
+
+	for(list<Bullet>::iterator it = enemyBulletClub.begin(); it != enemyBulletClub.end(); ++it){
+		it->updatePosition(timeDiference);
+		if(it->referenceCircle.colisaoExterna(playerCar.referenceCircle)){
+			endGame = true;
+		}
+	}
+	enemyBulletClub.remove_if(isOutsideScreen);
+
+	if(currentTime - timeToShoot > 1.0/shootFrequency){
+		for(list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
+			it->shoot(enemyBulletClub);
+		}
+		timeToShoot = currentTime;
+	}else if(!startGame) timeToShoot = currentTime;
+
+	verifyCheckpoints();
 	glutPostRedisplay();
 }
 
@@ -188,15 +215,41 @@ void display(){
 	glClearColor(1,1,1,0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	biggerCircle.draw();
-	smallerCircle.draw();
-	finishLine.draw();
-	for(int i = 0; i < enemies.size(); i++){
-		enemies.at(i).draw();
-	}
-	playerCar.draw();
-	for(list<Bullet>::iterator it = playerCar.bulletClub.begin(); it != playerCar.bulletClub.end(); ++it){
-		it->draw();
+	if(endGame){
+		char *tmpStr;
+		sprintf(str,"YOU LOSE");
+		glRasterPos2f(larguraJanela/2,alturaJanela/2);
+		tmpStr = str;
+		while( *tmpStr ){
+	        glutBitmapCharacter(font, *tmpStr);
+	        tmpStr++;
+	    }
+	}else if(winGame){
+		char *tmpStr;
+		sprintf(str,"YOU WIN");
+		glRasterPos2f(larguraJanela/2,alturaJanela/2);
+		tmpStr = str;
+		while( *tmpStr ){
+	        glutBitmapCharacter(font, *tmpStr);
+	        tmpStr++;
+	    }
+	}else{
+		biggerCircle.draw();
+		smallerCircle.draw();
+		finishLine.draw();
+
+		for(list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
+			it->draw();
+		}
+		playerCar.draw();
+		for(list<Bullet>::iterator it = playerBulletClub.begin(); it != playerBulletClub.end(); ++it){
+			it->draw();
+		}
+		for(list<Bullet>::iterator it = enemyBulletClub.begin(); it != enemyBulletClub.end(); ++it){
+			it->draw();
+		}
+
+		PrintScore(600.0,100.0);
 	}
 	glutSwapBuffers();
 }
@@ -216,4 +269,111 @@ void init(void){
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+}
+
+void PrintScore(GLfloat x, GLfloat y){
+	static GLdouble initialTime = glutGet(GLUT_ELAPSED_TIME);
+    char *tmpStr;
+	if(startGame)
+		sprintf(str, "Tempo: %.4lf s",(glutGet(GLUT_ELAPSED_TIME) - initialTime)/1000.0);
+	else{
+		sprintf(str, "Tempo: 0");
+		initialTime = glutGet(GLUT_ELAPSED_TIME);
+	}
+    //Define the position to start printing
+    glRasterPos2f(x, y);
+    //Print  the first Char with a certain font
+    //glutBitmapLength(font,(unsigned char*)str);
+    tmpStr = str;
+    //Print each of the other Char at time
+    while( *tmpStr ){
+        glutBitmapCharacter(font, *tmpStr);
+        tmpStr++;
+    }
+}
+
+
+void moveEnemy(Carro& enemy,GLdouble timeDiff,GLdouble currentTime){
+	int turnWheelProb = rand() % 10;
+
+	static GLdouble timeNow2 = currentTime;
+	if(currentTime - timeNow2 > enemy.rWheel){
+		timeNow2 = currentTime;
+	 	enemy.dWheel *= -1;
+		enemy.rWheel = rand() % 2001 + 500;
+	}
+	if(turnWheelProb < 7){
+		enemy.turn(enemy.dWheel*0.05*timeDiff);
+	}
+
+	int moveProb = rand() % 10;
+
+	static GLdouble timeNow = currentTime;
+	if(currentTime - timeNow > enemy.rMove){
+		timeNow = currentTime;
+		enemy.dMove *= -1;
+		enemy.rMove = rand() % 1000 + 5001;
+	}
+	if(moveProb < 9){
+		double currentCarAngle = enemy.carPartsAngle;
+		Point currentPosition = enemy.referenceCircle.center;
+		enemy.moveAhead(enemy.dMove,timeDiff);
+
+		if(enemy.referenceCircle.colisaoInterna(biggerCircle) ||
+			enemy.referenceCircle.colisaoExterna(smallerCircle) ||
+			 enemy.referenceCircle.colisaoExterna(playerCar.referenceCircle) ||
+		 		colisaoBetweenEnemies(enemy)){
+
+				enemy.referenceCircle.center = currentPosition;
+				enemy.carPartsAngle = currentCarAngle;
+				enemy.dMove *= -1;
+		}
+	}
+
+	int turnCannonProb = rand() % 10;
+
+	if(turnCannonProb < 8){
+		enemy.cannonAngle += enemy.dCannon;
+		if(enemy.cannonAngle > 45){
+			enemy.cannonAngle = 45;
+		}else if(enemy.cannonAngle < -45){
+			enemy.cannonAngle = -45;
+		}
+	}
+}
+
+void verifyCheckpoints(){
+	if(playerCar.referenceCircle.getCenterX() > biggerCircle.getCenterX() &&
+		playerCar.referenceCircle.getCenterY() < biggerCircle.getCenterY() &&
+		check1 && check2 && check3){
+			winGame = true;
+		}
+	if(playerCar.referenceCircle.getCenterX() < biggerCircle.getCenterX() &&
+		playerCar.referenceCircle.getCenterY() < biggerCircle.getCenterY()){
+			check1 = true;
+		}
+	if(playerCar.referenceCircle.getCenterX() < biggerCircle.getCenterX() &&
+		playerCar.referenceCircle.getCenterY() > biggerCircle.getCenterY() &&
+		check1){
+			check2 = true;
+		}
+	if(playerCar.referenceCircle.getCenterX() > biggerCircle.getCenterX() &&
+		playerCar.referenceCircle.getCenterY() > biggerCircle.getCenterY() &&
+		check1 && check2){
+			check3 = true;
+		}
+}
+
+bool colisaoBetweenEnemies(Carro& enemy){
+	for(list<Carro>::iterator it = enemies.begin();
+							it != enemies.end(); ++it){
+		if(it->referenceCircle.getCenterX() == enemy.referenceCircle.getCenterX() &&
+			it->referenceCircle.getCenterY() == enemy.referenceCircle.getCenterY()){
+
+			continue;
+		}else if(enemy.referenceCircle.colisaoExterna(it->referenceCircle)){
+				return true;
+			}
+	}
+	return false;
 }
