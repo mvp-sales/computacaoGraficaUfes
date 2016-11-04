@@ -181,13 +181,15 @@ void idle(){
 		}
 		enemyBulletClub.remove_if(isOutsideScreen);
 
-		if(currentTime - timeToShoot > 1.0/shootFrequency){
-			for(list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
-				it->shoot(enemyBulletClub);
+		if(startGame){
+			if(currentTime - timeToShoot > 1.0/shootFrequency){
+				for(list<Carro>::iterator it = enemies.begin(); it != enemies.end(); ++it){
+					it->shoot(enemyBulletClub);
+				}
+				timeToShoot = currentTime;
 			}
-			timeToShoot = currentTime;
-		}else if(!startGame) timeToShoot = currentTime;
-
+		}else timeToShoot = currentTime;
+		
 		verifyCheckpoints();
 	}
 	glutPostRedisplay();
