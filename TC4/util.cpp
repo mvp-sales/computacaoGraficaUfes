@@ -261,13 +261,13 @@ void processaArquivoSVG(const XMLNode* node, Circle& biggerCircle,Circle& smalle
 				elem->QueryDoubleAttribute("cx",&enemy.referenceCircle.center.coordX);
 				elem->QueryDoubleAttribute("cy",&enemy.referenceCircle.center.coordY);
 				elem->QueryDoubleAttribute("r",&enemy.referenceCircle.radius);
-				
+
 				enemy.referenceCircle.cor = cor;
 				enemy.setBasePos();
 
 				enemy.dMove = rand() % 2 == 0? -1 : 1;
 				enemy.dWheel = rand() % 2 == 0? 1 : -1;
-				enemy.cannonAngle = rand() % 2 == 0? 1 : -1;
+				enemy.dCannon = rand() % 2 == 0? 1 : -1;
 
 				enemy.rMove = rand() % 5000 + 1000;
 				enemy.rWheel = rand() % 1001;

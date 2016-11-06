@@ -4,9 +4,6 @@
 #include <time.h>
 #include <list>
 
-// QUANTIDADE DE MOVIMENTO EM X E EM Y
-#define movX 1.0
-#define movY 1.0
 
 //NAMESPACES
 using std::cout;
@@ -189,7 +186,7 @@ void idle(){
 				timeToShoot = currentTime;
 			}
 		}else timeToShoot = currentTime;
-		
+
 		verifyCheckpoints();
 	}
 	glutPostRedisplay();
@@ -280,6 +277,7 @@ void PrintScore(GLfloat x, GLfloat y){
 	static GLdouble initialTime = glutGet(GLUT_ELAPSED_TIME),
 					actualTime;
     char *tmpStr;
+	glColor3d(0.0,0.0,0.0);
 	if(winGame || endGame){
 		sprintf(str, "Tempo: %.4lf s",actualTime/1000.0);
 	}else if(startGame){
@@ -303,19 +301,15 @@ void PrintScore(GLfloat x, GLfloat y){
 
 
 void moveEnemy(Carro& enemy,GLdouble timeDiff,GLdouble currentTime){
-	int turnWheelProb = rand() % 10;
 
 	static GLdouble timeNow2 = currentTime;
 	if(currentTime - timeNow2 > enemy.rWheel){
 		timeNow2 = currentTime;
-	 	enemy.dWheel *= -1;
+		enemy.dWheel *= -1;
 		enemy.rWheel = rand() % 2001 + 500;
 	}
-	if(turnWheelProb < 7){
-		enemy.turn(enemy.dWheel*0.05*timeDiff);
-	}
+	enemy.turn(enemy.dWheel*0.05*timeDiff);
 
-	int moveProb = rand() % 10;
 
 	static GLdouble timeNow = currentTime;
 	if(currentTime - timeNow > enemy.rMove){
@@ -323,31 +317,27 @@ void moveEnemy(Carro& enemy,GLdouble timeDiff,GLdouble currentTime){
 		enemy.dMove *= -1;
 		enemy.rMove = rand() % 1000 + 5001;
 	}
-	if(moveProb < 9){
-		double currentCarAngle = enemy.carPartsAngle;
-		Point currentPosition = enemy.referenceCircle.center;
-		enemy.moveAhead(enemy.dMove,timeDiff);
+	double currentCarAngle = enemy.carPartsAngle;
+	Point currentPosition = enemy.referenceCircle.center;
+	enemy.moveAhead(enemy.dMove,timeDiff);
 
-		if(enemy.referenceCircle.colisaoInterna(biggerCircle) ||
-			enemy.referenceCircle.colisaoExterna(smallerCircle) ||
-			 enemy.referenceCircle.colisaoExterna(playerCar.referenceCircle) ||
-		 		colisaoBetweenEnemies(enemy)){
+	if(enemy.referenceCircle.colisaoInterna(biggerCircle) ||
+		enemy.referenceCircle.colisaoExterna(smallerCircle) ||
+		 enemy.referenceCircle.colisaoExterna(playerCar.referenceCircle) ||
+			colisaoBetweenEnemies(enemy)){
 
-				enemy.referenceCircle.center = currentPosition;
-				enemy.carPartsAngle = currentCarAngle;
-				enemy.dMove *= -1;
-		}
+			enemy.referenceCircle.center = currentPosition;
+			enemy.carPartsAngle = currentCarAngle;
+			enemy.dMove *= -1;
 	}
 
-	int turnCannonProb = rand() % 10;
-
-	if(turnCannonProb < 8){
-		enemy.cannonAngle += enemy.dCannon;
-		if(enemy.cannonAngle > 45){
-			enemy.cannonAngle = 45;
-		}else if(enemy.cannonAngle < -45){
-			enemy.cannonAngle = -45;
-		}
+	enemy.cannonAngle += enemy.dCannon;
+	if(enemy.cannonAngle > 45){
+		enemy.cannonAngle = 45;
+		enemy.dCannon *= -1;
+	}else if(enemy.cannonAngle < -45){
+		enemy.cannonAngle = -45;
+		enemy.dCannon *= -1;
 	}
 }
 
@@ -386,3 +376,50 @@ bool colisaoBetweenEnemies(Carro& enemy){
 	}
 	return false;
 }
+
+/*int turnWheelProb = rand() % 10;
+
+static GLdouble timeNow2 = currentTime;
+if(currentTime - timeNow2 > enemy.rWheel){
+	timeNow2 = currentTime;
+	enemy.dWheel *= -1;
+	enemy.rWheel = rand() % 2001 + 500;
+}
+if(turnWheelProb < 7){
+	enemy.turn(enemy.dWheel*0.05*timeDiff);
+}
+
+int moveProb = rand() % 10;
+
+static GLdouble timeNow = currentTime;
+if(currentTime - timeNow > enemy.rMove){
+	timeNow = currentTime;
+	enemy.dMove *= -1;
+	enemy.rMove = rand() % 1000 + 5001;
+}
+if(moveProb < 7){
+	double currentCarAngle = enemy.carPartsAngle;
+	Point currentPosition = enemy.referenceCircle.center;
+	enemy.moveAhead(enemy.dMove,timeDiff);
+
+	if(enemy.referenceCircle.colisaoInterna(biggerCircle) ||
+		enemy.referenceCircle.colisaoExterna(smallerCircle) ||
+		 enemy.referenceCircle.colisaoExterna(playerCar.referenceCircle) ||
+			colisaoBetweenEnemies(enemy)){
+
+			enemy.referenceCircle.center = currentPosition;
+			enemy.carPartsAngle = currentCarAngle;
+			enemy.dMove *= -1;
+	}
+}
+
+int turnCannonProb = rand() % 10;
+
+if(turnCannonProb < 8){
+	enemy.cannonAngle += enemy.dCannon;
+	if(enemy.cannonAngle > 45){
+		enemy.cannonAngle = 45;
+	}else if(enemy.cannonAngle < -45){
+		enemy.cannonAngle = -45;
+	}
+}*/

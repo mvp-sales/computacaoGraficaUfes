@@ -31,8 +31,6 @@ bool Carro::colisaoEnemies(std::list<Carro>& enemies){
 
 void Carro::shoot(std::list<Bullet>& bulletsClub){
 	Bullet* newBullet = new Bullet(*this);
-	//newBullet->draw();
-	//bulletClub.push_back(*newBullet);
 	bulletsClub.push_back(*newBullet);
 	delete newBullet;
 }
@@ -187,7 +185,7 @@ Bullet::Bullet(Carro& player){
 
 
 	this->referenceCircle.radius=0.08*player.referenceCircle.radius;
-	this->referenceCircle.cor = new Color(0.0,0.0,0.0);
+	this->referenceCircle.cor = new Color(player.referenceCircle.cor->red,player.referenceCircle.cor->green,player.referenceCircle.cor->blue);
 	this->referenceCircle.center.coordX = topCannonGlobal[0];
 	this->referenceCircle.center.coordY = topCannonGlobal[1];
 
